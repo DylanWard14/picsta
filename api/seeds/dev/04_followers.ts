@@ -6,8 +6,8 @@ export async function seed(knex: Knex): Promise<void> {
 
   // Inserts seed entries
   await knex("followers").insert([
-    { leader_id: 1, follower_id: 2 },
-    { leader_id: 1, follower_id: 3 },
-    { leader_id: 2, follower_id: 1 },
+    { id: 1, leader_id: 1, follower_id: 2 },
+    { id: 2, leader_id: 1, follower_id: 3 },
+    { id: 3, leader_id: 2, follower_id: 1 },
   ]);
 }
