@@ -1,4 +1,4 @@
-import type { Knex } from "knex";
+import { Knex, knex } from "knex";
 
 const config: { [key: string]: Knex.Config } = {
   development: {
@@ -53,4 +53,7 @@ const config: { [key: string]: Knex.Config } = {
   },
 };
 
-module.exports = config;
+const environment = process.env.NODE_ENV || "development";
+export const database = knex(config[environment]);
+
+export default config;
