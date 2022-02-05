@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
 import { User } from "../models/user";
-import { database } from "../knexfile";
+import { database } from "../../knexfile";
 import { GenericQuery } from "../types";
 
 type UserRequest = Request<
@@ -39,6 +39,7 @@ export const getUsers = async (req: UserRequest, res: Response) => {
           builder.limit(limit);
         }
       });
+
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ error });
