@@ -18,6 +18,7 @@ const defaultSelect: Array<keyof User> = [
   "username",
   "bio",
   "avatar_url",
+  "email",
 ];
 
 const isUserKey = (key: string): key is keyof User => {
@@ -28,6 +29,7 @@ const isUserKey = (key: string): key is keyof User => {
     "username",
     "bio",
     "avatar_url",
+    "email",
   ].includes(key);
 };
 
@@ -91,7 +93,47 @@ export const getUser = async (req: UserRequest, res: Response) => {
   }
 };
 
-export const createUser = async (req: Request, res: Response) => {};
+type CreateUserRequest = Request<
+  {},
+  {},
+  Pick<User, "username" | "email" | "bio" | "avatar_url"> & { password: string }
+>;
+
+export const createUser = async (req: CreateUserRequest, res: Response) => {
+  try {
+    // TODO add logic for hashing password
+    const { body } = req;
+
+    const emailUser = await database<User>("users")
+      .where({ email: body.email })
+      .first();
+
+    if (emailUser) {
+      return res.status(409).json({ error: "Email address already in use." });
+    }
+
+    const usernameUser = await database<User>("users")
+      .where({ username: body.username })
+      .first();
+
+    if (usernameUser) {
+      return res.status(409).json({ error: "Username already taken" });
+    }
+
+    await database<User>("users").insert(body);
+
+    const user = await database<User>("users")
+      .where({
+        username: body.username,
+        email: body.email,
+      })
+      .first(defaultSelect);
+
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+};
 
 export const updateUser = async (req: Request, res: Response) => {};
 

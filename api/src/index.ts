@@ -1,10 +1,11 @@
 import express from "express";
+import bodyParser from "body-parser";
 
 import { rootRouter } from "./routes";
 
-// TODO JSON body parser?
-
 const app = express();
+
+app.use(bodyParser.json());
 
 app.get("/", (req, res) => {
   res.status(200).send("Okay");
