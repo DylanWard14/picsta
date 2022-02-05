@@ -90,3 +90,9 @@ export const getUser = async (req: UserRequest, res: Response) => {
     res.status(500).json({ error });
   }
 };
+
+export const createUser = async (req: Request, res: Response) => {};
+
+export const updateUser = async (req: Request, res: Response) => {};
+
+export const deleteUser = async (req: Request, res: Response) => {};
