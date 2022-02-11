@@ -4,6 +4,7 @@ const config: { [key: string]: Knex.Config } = {
   development: {
     client: "postgresql",
     connection: {
+      host: "postgres",
       database: "insta-dev",
       user: "postgres",
       password: "password",

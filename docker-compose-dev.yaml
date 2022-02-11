@@ -1,0 +1,27 @@
+version: "3"
+services:
+  postgres:
+    image: "postgres:latest"
+    environment:
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - ./api/docker-entrypoint-initdb.d/dev:/docker-entrypoint-initdb.d
+  pgadmin:
+    image: "dpage/pgadmin4:latest"
+    ports:
+      - "3001:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: password
+  api:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./api
+    command: sh -c 'npx knex migrate:latest && npx knex seed:run && npm start'
+    volumes:
+      - /app/node_modules
+      - ./api:/app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
