@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import bcrypt from "bcrypt";
 
 import { User } from "../models/user";
 import { database } from "../../knexfile";
@@ -101,8 +102,8 @@ type CreateUserRequest = Request<
 
 export const createUser = async (req: CreateUserRequest, res: Response) => {
   try {
-    // TODO add logic for hashing password
     const { body } = req;
+    const saltRounds = 10;
 
     const emailUser = await database<User>("users")
       .where({ email: body.email })
@@ -120,7 +121,12 @@ export const createUser = async (req: CreateUserRequest, res: Response) => {
       return res.status(409).json({ error: "Username already taken" });
     }
 
-    await database<User>("users").insert(body);
+    const hashedPassword = await bcrypt.hash(body.password, saltRounds);
+
+    await database<User & { password: string }>("users").insert({
+      ...body,
+      password: hashedPassword,
+    });
 
     const user = await database<User>("users")
       .where({
@@ -129,7 +135,7 @@ export const createUser = async (req: CreateUserRequest, res: Response) => {
       })
       .first(defaultSelect);
 
-    res.status(200).json(user);
+    res.status(201).json(user);
   } catch (error) {
     res.status(500).json({ error });
   }
