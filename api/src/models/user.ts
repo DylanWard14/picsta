@@ -6,4 +6,5 @@ export type User = {
   bio: string | null;
   avatar_url: string | null;
   email: string;
+  password: string;
 };

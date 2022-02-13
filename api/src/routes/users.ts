@@ -6,6 +6,7 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  loginUser,
 } from "../controllers/users";
 
 const userRouter = express.Router();
@@ -19,5 +20,7 @@ userRouter.post("/", createUser);
 userRouter.patch("/", updateUser);
 
 userRouter.delete("/:id", deleteUser);
+
+userRouter.post("/login", loginUser);
 
 export { userRouter };

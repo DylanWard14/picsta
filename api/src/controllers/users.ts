@@ -99,7 +99,7 @@ export const getUser = async (req: UserRequest, res: Response) => {
 type CreateUserRequest = Request<
   {},
   {},
-  Pick<User, "username" | "email" | "bio" | "avatar_url"> & { password: string }
+  Pick<User, "username" | "email" | "bio" | "avatar_url" | "password">
 >;
 
 export const createUser = async (req: CreateUserRequest, res: Response) => {
@@ -153,7 +153,7 @@ export const createUser = async (req: CreateUserRequest, res: Response) => {
 type UpdateUserRequest = Request<
   {},
   {},
-  Pick<User, "username" | "email" | "bio" | "avatar_url"> & { password: string }
+  Pick<User, "username" | "email" | "bio" | "avatar_url" | "password">
 >;
 
 type UserJWT = User & { exp: number };
@@ -260,6 +260,38 @@ export const deleteUser = async (req: DeleteUserRequest, res: Response) => {
     await database<User>("users").where({ id: params.id }).delete();
 
     return res.status(200).send("User deleted");
+  } catch (error) {
+    res.status(401).json({ error });
+  }
+};
+
+type LoginUserRequest = Request<{}, {}, Pick<User, "email" | "password">>;
+
+export const loginUser = async (req: LoginUserRequest, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    const user = await getUserByValues({ email }, [
+      ...defaultSelect,
+      "password",
+    ]);
+
+    if (!user) {
+      return res.status(401).json({ error: "invalid email or password" });
+    }
+
+    const passwordIsValid = await bcrypt.compare(password, user.password);
+
+    if (!passwordIsValid) {
+      return res.status(401).json({ error: "invalid email or password" });
+    }
+
+    // TODO we need to store this token in a tokens database so that we can invalidate specific tokens
+    // when a user logsouts/changes a password, or wants to remove a specific device
+    const token = await jwt.sign({ ...user }, process.env.JWT_SECRET ?? "", {
+      expiresIn: 60 * 60,
+    });
+
+    return res.status(200).json({ ...user, password: undefined, jwt: token });
   } catch (error) {
     res.status(401).json({ error });
   }
