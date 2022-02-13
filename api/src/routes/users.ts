@@ -16,8 +16,8 @@ userRouter.get("/:id", getUser);
 
 userRouter.post("/", createUser);
 
-userRouter.put("/", updateUser);
+userRouter.patch("/", updateUser);
 
-userRouter.delete("/", deleteUser);
+userRouter.delete("/:id", deleteUser);
 
 export { userRouter };
