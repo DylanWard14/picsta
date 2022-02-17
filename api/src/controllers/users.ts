@@ -38,20 +38,42 @@ const isUserKey = (key: string): key is keyof User => {
   ].includes(key);
 };
 
+const computeUserSelect = (selectQuery?: string): Array<keyof User> => {
+  if (typeof selectQuery === "undefined") {
+    return defaultSelect;
+  }
+
+  const computedSelect = selectQuery
+    .split(",")
+    .reduce<Array<keyof User>>((acc, item) => {
+      if (!isUserKey(item)) {
+        return acc;
+      }
+      return [...acc, item];
+    }, []);
+
+  if (computedSelect.length > 0) {
+    return computedSelect;
+  }
+
+  return defaultSelect;
+};
+
 export const getUsers = async (req: UsersRequest, res: Response) => {
   try {
     const { limit, skip, select, ...where } = req.query;
     // Not sure if the best way to stop people from selecting/quering for the password
     delete where.password;
 
-    const computedSelect: Array<keyof User> = select
-      ? select.split(",").reduce<Array<keyof User>>((acc, item) => {
-          if (isUserKey(item)) {
-            return [...acc, item];
-          }
-          return acc;
-        }, [])
-      : defaultSelect;
+    if (select?.includes("password")) {
+      return res.status(400).json({
+        error: {
+          message: "Invalid selects",
+        },
+      });
+    }
+
+    const computedSelect = computeUserSelect(select);
 
     const users = await database<User>("users")
       .where(where)
