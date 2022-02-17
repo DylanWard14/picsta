@@ -9,12 +9,7 @@ import { getUserById, getUserByValues } from "../utils";
 
 const saltRounds = 10;
 
-type UsersRequest = Request<
-  {},
-  {},
-  {},
-  GenericQuery<User & { password: string }>
->;
+type UsersRequest = Request<{}, {}, {}, GenericQuery<User>>;
 
 const defaultSelect: Array<keyof User> = [
   "id",
@@ -68,7 +63,7 @@ export const getUsers = async (req: UsersRequest, res: Response) => {
     if (select?.includes("password")) {
       return res.status(400).json({
         error: {
-          message: "Invalid selects",
+          message: "Invalid select",
         },
       });
     }
@@ -97,14 +92,16 @@ type UserRequest = Request<{ id: number }, {}, {}, { select?: string }>;
 export const getUser = async (req: UserRequest, res: Response) => {
   try {
     const { select } = req.query;
-    const computedSelect: Array<keyof User> = select
-      ? select.split(",").reduce<Array<keyof User>>((acc, item) => {
-          if (isUserKey(item)) {
-            return [...acc, item];
-          }
-          return acc;
-        }, [])
-      : defaultSelect;
+
+    if (select?.includes("password")) {
+      return res.status(400).json({
+        error: {
+          message: "Invalid select",
+        },
+      });
+    }
+
+    const computedSelect = computeUserSelect(select);
 
     const user = await getUserById(req.params.id, computedSelect);
 
