@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
 
 import { Post } from "../models/post";
 import { database } from "../../knexfile";
 import { GenericQuery } from "../types";
-import { getPostById } from "../utils";
+import { getPostById, isUserJWT } from "../utils";
 
 type PostsRequest = Request<{}, {}, {}, GenericQuery<Post>>;
 
@@ -77,8 +78,39 @@ export const getPost = async (req: PostRequest, res: Response) => {
   }
 };
 
-export const createPost = async (req: Request, res: Response) => {
-  return res.status(418).send();
+type CreatePostRequest = Request<
+  {},
+  {},
+  Pick<Post, "altText" | "caption" | "photo_url">
+>;
+
+export const createPost = async (req: CreatePostRequest, res: Response) => {
+  try {
+    const { headers, body } = req;
+    const { authorization } = headers;
+
+    if (!authorization) {
+      return res
+        .status(400)
+        .json({ error: { message: "Please supply authorization header" } });
+    }
+
+    // Will throw error if verification fails
+    const jwtUser = await jwt.verify(
+      authorization.split(" ")[1],
+      process.env.JWT_SECRET ?? ""
+    );
+
+    if (!isUserJWT(jwtUser)) {
+      throw new Error("Invalid JWT");
+    }
+
+    await database<Post>("posts").insert({ ...body, user_id: jwtUser.id });
+
+    return res.status(201).send();
+  } catch (error) {
+    return res.status(500).json({ error });
+  }
 };
 
 export const updatePost = async (req: Request, res: Response) => {

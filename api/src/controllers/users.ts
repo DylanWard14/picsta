@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { User } from "../models/user";
 import { database } from "../../knexfile";
 import { GenericQuery } from "../types";
-import { getUserById, getUserByValues } from "../utils";
+import { getUserById, getUserByValues, isUserJWT } from "../utils";
 
 const saltRounds = 10;
 
@@ -174,21 +174,6 @@ type UpdateUserRequest = Request<
   {},
   Pick<User, "username" | "email" | "bio" | "avatar_url" | "password">
 >;
-
-type UserJWT = User & { exp: number };
-
-// Returns true if this jwt is for a user
-const isUserJWT = (jwt: string | jwt.JwtPayload): jwt is UserJWT => {
-  if (typeof jwt === "string") {
-    return false;
-  }
-
-  if (jwt.id && jwt.username && jwt.email) {
-    return true;
-  }
-
-  return false;
-};
 
 export const updateUser = async (req: UpdateUserRequest, res: Response) => {
   try {
